@@ -109,7 +109,6 @@ If there are more or fewer fields in the block than the row, pass functions to-b
   [blocks name f & args]
   (let [[index block] (seq/find-first (fn [[index block]]
                                         (= name (:name block))) (seq/indexed blocks))]
-    (println "update-block: found=" index block)
     (if block
       (splice-seq blocks index (apply f block args))
       blocks)))

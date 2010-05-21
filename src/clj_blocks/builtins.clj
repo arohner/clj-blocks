@@ -113,9 +113,7 @@
 (derive-ref h clojure.lang.IPersistentVector :vector)
 
 (defmethod render-block [:vector :data] [block context]
-  (println "render-block vector:" block)
   (str "[" (str/join " " (map #(render % context) (:value block))) "]"))
 
 (defmethod render-block [:link :any-context] [block context]
-  (println "render-block link:" block)
   [:a {:href (:link-to block)} (:value block)])

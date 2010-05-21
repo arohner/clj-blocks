@@ -1,7 +1,6 @@
 (in-ns 'clj-blocks.core)
 
 (defmethod render-model-blocks :table [blocks _]
-  (println "render-model-blocks :table:" blocks)
   [:tr {:class "clj-block-row"}
    (for [block blocks]
      [:td (render-block block :table)])])
