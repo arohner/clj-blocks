@@ -10,7 +10,6 @@
 
 (defmethod render-block :default [block context]
   {:pre [(instance? clj-blocks.core.block block)]}
-  (println "WARNING! render-block default method for " (:type block) context)
   (str (:value block)))
 
 (defmethod validate-block :default [block & _]
@@ -92,7 +91,7 @@
 (defn render-nested-blocks [object context]
   ;{:pre [(instance? block object)]}
   (for [[name val] object
-        :let [block (make-block (type val) val :name name :label name)]]
+        :let [block (make-block {:type (type val) :value val :name name :label name})]]
     [:div {:class "clj-block-value"}
      (with-label block
        (render-block block context))]))
@@ -105,8 +104,18 @@
 (defmethod render-block [:map :table] [block _]
   [:tr {:class "clj-block-row"}
    (for [[name val] (:value block)]
-     [:td (render-block (make-block (type val) val :name name :label name) :table)])])
+     [:td (render-block (make-block {:type (type val) :value val :name name :label name}) :table)])])
 
 (defmethod render-block [:map :form] [block _]
   [:div {:class "clj-block-form"}
    (render-nested-blocks (:value block) :form)])
+
+(derive-ref h clojure.lang.IPersistentVector :vector)
+
+(defmethod render-block [:vector :data] [block context]
+  (println "render-block vector:" block)
+  (str "[" (str/join " " (map #(render % context) (:value block))) "]"))
+
+(defmethod render-block [:link :any-context] [block context]
+  (println "render-block link:" block)
+  [:a {:href (:link-to block)} (:value block)])

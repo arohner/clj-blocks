@@ -1,7 +1,9 @@
 (ns clj-blocks.core
   (:use [hiccup.core :only (html)])
   (:use [clojure.contrib.java-utils :only (as-str)])
-  (:use [clj-blocks.utils :only (map-vals make-defrecord-map-constructor)])
+  (:require [clojure.contrib.string :as str])
+  (:require [clojure.contrib.seq :as seq])
+  (:use clj-blocks.utils)
   (:use [clojure.contrib.except :only (throwf)])
   (:require [sandbar.forms :as forms]))
 
@@ -13,34 +15,30 @@
 (defrecord block
   [type        ;; the dispatch value for the block. required
    name        ;; optional name for the data. Required in form contexts
-   label       ;; user-visible description of the data
    value       ;; the value of the data. required
-   
+
+   label       ;; user-visible description of the data
    dom-id      ;; optional dom id to attach
    css-class   ;; optional CSS class
    css-style   ;; optional CSS style
    ])
 
-(let [block-constructor (make-defrecord-map-constructor block)]
-  (defn make-block
-  "makes a block. options are key value pairs that set fields in the block record"
-  [type value & options]
-  (let [options (map-vals as-str (apply hash-map options))]
-    (block-constructor (merge {:type type :value value} options)))))
+(defn make-block
+  "makes a block"
+  [fields]
+  (make-defrecord-from-map block fields))
 
 (defmulti render-block
   "renders an object/value, in a specific context"
   (fn [object context]
-    ;(println "render-block dispatch:" object context)
     (assert (instance? block object))
     [(:type object) context])
   :hierarchy h)
 
 (defn render [object context]
-  (println "render: " (class object))
   (render-block (if (instance? block object)
                   object
-                  (make-block (type object) object)) context))
+                  (make-block {:type (type object) :value object})) context))
 
 (defn derive-ref [ref-h child parent]
   (dosync
@@ -67,12 +65,54 @@
       (:label block)": "])
    body))
 
-(defn read-from-params
-  "fields is [[param-name param-type]+] param-name is a key in the params map, param-type is a value in the blocks hierarchy that has implemented read-block. Returns a map of the parsed values"
+(defn read-from-params*
+  "fields is [[param-name param-type]+] param-name is a key in the
+  params map, param-type is a value in the blocks hierarchy that has
+  implemented read-block. Returns a map of the parsed values"
   [params fields]
-  (into {} (inspect (for [[name type] fields]
+  (into {} (for [[name type] fields]
              (do
                (println name type)
-               [name (read-block (get params (clojure.core/name name)) type)])))))
+               [name (read-block (get params (clojure.core/name name)) type)]))))
+
+(defrecord model
+  [fields
+   to-block
+   from-block
+   validator])
+
+(defmacro defmodel
+  "a model is a 'schema' for defining how to render and read a block that is composed of multiple values (like a DB row, comprised of multiple columns). Fields is a seq of maps. Each map defines a component block.
+
+If there are more or fewer fields in the block than the row, pass functions to-block from-block. To-block takes one argument, your domain object, and returns a seq of blocks. from-block does the reverse."
+  [name & args]
+  (let [argmap (apply hash-map args)]
+    `(def ~name (make-defrecord-from-map model ~argmap))))
+
+(defn get-model-blocks [model row]
+  (let [row (if (:to-block model)
+              ((:to-block model) row)
+              row)]
+    (for [field (:fields model)]
+      (make-block (merge field {:value (get row (:name field))})))))
+
+(defmulti render-model-blocks (fn [blocks context]
+                                context))
+
+(defn splice-seq
+  "replaces the value at position idx with new-val. Returns the updated seq"
+  [seq idx new-val]
+  (concat (take idx seq) [new-val] (drop (inc idx) seq)))
+
+(defn update-block
+  "given a seq of blocks, finds the block with name, and applies f with any extra args. f should return an updated block"
+  [blocks name f & args]
+  (let [[index block] (seq/find-first (fn [[index block]]
+                                        (= name (:name block))) (seq/indexed blocks))]
+    (println "update-block: found=" index block)
+    (if block
+      (splice-seq blocks index (apply f block args))
+      blocks)))
 
 (load "builtins")
+(load "table")
