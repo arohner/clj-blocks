@@ -1,21 +1,22 @@
 (in-ns 'clj-blocks.core)
 
-(defmethod render-model-blocks :table [blocks _]
+(defmethod render-view-blocks :table [blocks _]
   [:tr {:class "clj-block-row"}
    (for [block blocks]
      [:td (render-block block :table)])])
 
-(defn table-header [model]
+(defn table-header [view]
   [:thead
    [:tr
-    (for [field (:fields model)]
-      [:th (:label field)])]])
+    (for [field (:fields view)]
+      [:th (get-label field)])]])
 
 (defn with-table
   "produces an HTML table containing rows, all rendered as type model"
-  [model rows & {:keys [id]}]
+  [view rows & {:keys [id]}]
   [:table {:id id}
-   (table-header model)
+   (table-header view)
    [:tbody
-    (for [row rows]
-      (render (with-meta row {:type model}) :table))]])
+    (when (seq rows)
+      (for [row rows]
+        (render-view view :table row)))]])

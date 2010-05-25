@@ -31,7 +31,11 @@
    (when (:label block)
      [:label {:for (:name block)} (:prompt block)])
    [:input (merge {:type "checkbox"}
+                  {:checked (boolean (:value block))}
                   (map-vals str (select-keys block [:id :class :style :name :value])))]))
+
+(defmethod render-block [:checkbox :form] [block _]
+  (form/check-box (:name block) (boolean (:value block))))
 
 (defmethod read-block :bool [val-str _]
   (if (= "true")
@@ -117,3 +121,24 @@
 
 (defmethod render-block [:link :any-context] [block context]
   [:a {:href (:link-to block)} (:value block)])
+
+;;===========
+;; Select / Dropdown / Multiselect
+;;===========
+
+(defn render-select [block]
+  [:select
+   (->
+    block
+    (select-keys [:dom-id :css-class :css-style :multiple :disabled :name])
+    (clojure.set/rename-keys {:dom-id :id :css-class :class :css-style :style}))
+   (println "render-select:" (take 10 (:allowed-values block)))
+   (for [[label value] (:allowed-values block)]
+     [:option {:label label
+               :selected (= value (:value block))} value])])
+
+(defmethod render-block [:dropdown :any-context] [block context]
+  (render-select block))
+
+(defmethod render-block [:multiselect :any-context] [block context]
+  (render-select (assoc block :multiple true)))

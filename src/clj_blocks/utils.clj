@@ -1,4 +1,5 @@
-(ns clj-blocks.utils)
+(ns clj-blocks.utils
+  (:require [clojure.contrib.string :as str]))
 
 (defn map-keys [f m]
   "returns a new map with f applied to the keys of the map"
@@ -71,6 +72,13 @@
   (let [defn-args (filter identity ((juxt :name :doc-string :attr-map :params) arg-map))
         body (:body arg-map)]
     `(~@defn-args ~@body)))
+
+(defn humanize [obj]
+  (let [obj (if (or (symbol? obj)
+                    (keyword? obj))
+              (name obj)
+              obj)]
+    (str/capitalize obj)))
 
 (defmacro defn-map
   "generates a defn expression, but arguments are a map, to make it
