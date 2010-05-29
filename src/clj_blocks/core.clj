@@ -88,7 +88,7 @@ The view defines several functions. :fields, :reader, :writer. :fields is requir
    The rest of the vector is a map of arguments. The following keys are recognized:
    :label - This is an html label, used in data and form contexts. When not specified, inferred from name.
    :value - The value to display. May be a literal or a fn of one argument, the input map. If not specified, the value will be looked up in the map using name as the key. 
-   :type - The data type of the field. This is used to read, and specifies the default rendering. When rendering and type is not specified, inferred to be (type value). Required when using read-view. 
+   :type - The data type of the field. This is used to read, and specifies the default rendering. When rendering and type is not specified, inferred to be (type value). When reading and not specified, type is assumed to be :string
    :display-as - Overrides the default rendering; must be a value that render-block understands. Many values will consume extra optional arguments in the field map, consult the documentation for those.
 
    :dom-id
@@ -138,17 +138,18 @@ The view defines several functions. :fields, :reader, :writer. :fields is requir
                 options (call-fns-of-map options map)
                 options (if (:type options)
                           options
-                          (merge options {:type (type (:value options))}))]]
+                          (merge options {:type (or (type (:value options)) :string)}))]]
       (make-block options))))
 
 (defn read-view
   "Reads in the values from an HTTP params map, using a view created by defview. Returns a clojure map. "
   [view params]
-  (let [obj (into {} (for [{name :name
-                            type :type} (:fields view)]
+  (let [obj (into {} (for [block (get-view-blocks view {})
+                           :let [{name :name
+                                  type :type} block]]
                        (do
                          (assert type)
-                         [name (read-block (get params (clojure.core/name name)) type)])))
+                         [(keyword name) (read-block (get params (keyword name)) type)])))
         reader-fn (:reader view)]
     (if reader-fn
       (reader-fn obj)
@@ -158,7 +159,10 @@ The view defines several functions. :fields, :reader, :writer. :fields is requir
                                 context))
 
 (defn render-view [view context map]
-  (render-view-blocks (get-view-blocks view map) context))
+  (let [map (if-let [writer-fn (:writer view)]
+              (writer-fn map)
+              map)]
+    (render-view-blocks (get-view-blocks view map) context)))
 
 (defn splice-seq
   "replaces the value at position idx with new-val. Returns the updated seq"

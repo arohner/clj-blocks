@@ -38,7 +38,7 @@
   (form/check-box (:name block) (boolean (:value block))))
 
 (defmethod read-block :bool [val-str _]
-  (if (= "true")
+  (if (= val-str "true")
     true
     false))
 
@@ -52,7 +52,9 @@
   (str (:value block)))
 
 (defmethod read-block :int [val-str _]
-  (Integer/parseInt val-str))
+  (if val-str
+    (Integer/parseInt val-str)
+    nil))
 
 (defmethod validate-block :int [val & _]
   (integer? val))
@@ -84,8 +86,10 @@
 
 (defmethod read-block :string [s _]
   s)
-  ; (forms/form-textfield (:prompt block) (:name block) (map-vals str (select-keys block [:id :class :style :name :value]))))
 
+(defmethod read-block :keyword [s _]
+  (assert (string? s))
+  (keyword s))
 ;;========================
 ;; Default Object handling
 ;;========================
@@ -132,13 +136,16 @@
     block
     (select-keys [:dom-id :css-class :css-style :multiple :disabled :name])
     (clojure.set/rename-keys {:dom-id :id :css-class :class :css-style :style}))
-   (println "render-select:" (take 10 (:allowed-values block)))
    (for [[label value] (:allowed-values block)]
      [:option {:label label
-               :selected (= value (:value block))} value])])
+               :selected (= value (:value block))
+               :value value}])])
 
 (defmethod render-block [:dropdown :any-context] [block context]
   (render-select block))
 
 (defmethod render-block [:multiselect :any-context] [block context]
   (render-select (assoc block :multiple true)))
+
+(defmethod render-block [:hidden :form] [block _]
+  [:input {:type :hidden :name (:name block) :value (:value block)} ])
