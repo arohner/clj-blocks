@@ -14,6 +14,11 @@
                                              (cljs js-code)
                                              js-code)]))
 
+(defn id
+  "converts the name of a dom id to a jquery selector. i.e. foo -> #foo"
+  [id]
+  (str "#" id))
+
 (defn highlight-div
   "returns the javascript to temporarily highlight a div"
   [selector]
