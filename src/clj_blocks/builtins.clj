@@ -67,6 +67,11 @@
 (defmethod validate-block :positive-int [val & _]
   (and (integer? val) (> val 0)))
 
+(derive-ref h Double :floating-point)
+(derive-ref h Float :floating-point)
+
+(defmethod render-block [:floating-point :any-context] [block _]
+  (str (format "%2.2f" (:value block))))
 
 ;;========
 ;; Strings
