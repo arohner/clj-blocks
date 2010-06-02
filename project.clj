@@ -9,7 +9,8 @@
                  [compojure "0.4.0-SNAPSHOT"]
 		 [ring/ring-core "0.2.0"]
 		 [ring/ring-devel "0.2.0"]
-		 [ring/ring-jetty-adapter "0.2.0"]]
+		 [ring/ring-jetty-adapter "0.2.0"]
+                 [scriptjure "0.1.7"]]
   :dev-dependencies [[leiningen/lein-swank "1.1.0"]
 		     [swank-clojure "1.2.0-SNAPSHOT"]
 		     [jline "0.9.94"]])
