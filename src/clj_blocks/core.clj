@@ -1,3 +1,11 @@
+;   Copyright (c) Allen Rohner. All rights reserved.
+;   The use and distribution terms for this software are covered by the
+;   Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+;   which can be found in the file epl-v10.html at the root of this distribution.
+;   By using this software in any fashion, you are agreeing to be bound by
+;   the terms of this license.
+;   You must not remove this notice, or any other, from this software.
+
 (ns clj-blocks.core
   (:use [hiccup.core :only (html)])
   (:require [hiccup.page-helpers :as page])
@@ -163,11 +171,6 @@ The view defines several functions. :fields, :reader, :writer. :fields is requir
               (writer-fn map)
               map)]
     (render-view-blocks (get-view-blocks view map) context)))
-
-(defn splice-seq
-  "replaces the value at position idx with new-val. Returns the updated seq"
-  [seq idx new-val]
-  (concat (take idx seq) [new-val] (drop (inc idx) seq)))
 
 (load "builtins")
 (load "table")

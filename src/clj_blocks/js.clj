@@ -9,6 +9,7 @@
                                                  (return false))}) text]))
 
 (defn script
+  "makes an HTML tag that contains javascript. js should either be a string literal or a fragment that can be compiled with scriptjure"
   [js-code]
   (html [:script {:type "text/javascript"} (if (seq? js-code)
                                              (cljs js-code)
@@ -70,12 +71,7 @@
   (js* (. (jQuery (clj selector)) load (clj url))))
 
 (defn ajax-replace [selector url]
-  "JS snippet replaces selector with the content from URL. differs from ajax-update in that it will replace the node, including attributes"
+  "JS snippet replaces selector with the content from URL. differs from ajax-update in that it will replace the entire node, rather than the content of the node"
   (js* (. jQuery get (clj url)
           (fn [data, status, request]
             (. (jQuery (clj selector)) replaceWith data)))))
-
-(defn placeholder
-  "adds placeholder text to an input box. The element should have an attribute 'placeholder'"
-  [selector]
-  (js* (. (jQuery (clj selector)) placeholder)))

@@ -2,13 +2,12 @@
   (:use clj-blocks.utils)
   (:use [clojure.contrib.except :only (throwf)])
   (:require [clojure.contrib.string :as str])
-  ;(:require [clout.core :as clout])
   (:require [compojure.core :as compojure]))
 
 (defmacro defroutefn
   "Defines a defn, and associates it with a URL route. The defined fn
   takes one argument, the request. The call to defroutefn must be in a
-  namespace using restful-routes"
+  namespace using ns-routes"
 
   [name [http-method http-path] & defn-args]
   (let [defn-args (cons name defn-args)
@@ -24,7 +23,7 @@
     [(keyword name) (::http-method (meta var-fn)) (::http-path (meta var-fn))]))
 
 (defmacro ns-routes
-  "Returns the set of routes from ns defined using defroutefn"
+  "Returns the set of routes in ns defined using defroutefn"
   [ns-symbol]
   (require ns-symbol)
   (let [ns (find-ns ns-symbol)
