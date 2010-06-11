@@ -1,6 +1,7 @@
 (ns clj-blocks.routes
   (:use clj-blocks.utils)
   (:use [clojure.contrib.except :only (throwf)])
+  (:require ring.middleware.keyword-params)
   (:require [clojure.contrib.string :as str])
   (:require [compojure.core :as compojure]))
 
@@ -36,7 +37,7 @@
                           path (format path name)]
                       (when f
                         (println "adding route" http-method path "->" fn-name)
-                        (@(var compojure/compile-route) http-method path {:as 'request} [`(~f ~'request)])))))
+                        (@(var compojure/compile-route) http-method path {:as 'request} [`(~f (update-in ~'request [:params] (var ring.middleware.keyword-params/keyify-params)))])))))
                 (filter identity)
                 (into []))]
     `(apply compojure/routes ~routes)))
