@@ -15,7 +15,10 @@
   (:require [clojure.contrib.seq :as seq])
   (:use clj-blocks.utils)
   (:use [clojure.contrib.except :only (throwf)])
-                                        ;(:require [sandbar.forms :as forms])
+  (:require [clj-blocks.js :as js])
+  (:require [clj-blocks.actions :as actions])
+  (:use [com.reasonr.scriptjure :only (js js*)])
+
   )
 
 ;;;; UI framework for building web pages quickly. Inspired by weblocks
@@ -40,7 +43,6 @@
   (make-defrecord-from-map block fields))
 
 (defn render-block-dispatch [object context]
-  (assert (instance? block object))
   [(or (:display-as object) (:type object)) context])
 
 (defmulti render-block
@@ -87,22 +89,32 @@
   (make-defrecord-from-map view argmap))
 
 (defmacro defview
-  "a view is a customized definition of how to render and read a clojure map.
+"a view is a customized definition of how to render and read a
+clojure map.
 
-The view defines several functions. :fields, :reader, :writer. :fields is required, :reader and writer are optional.
+The view defines several functions. :fields, :reader, :writer. :fields
+is required, :reader and writer are optional.
 
-  fields is a seq of fields. Each field is a vector. The first element in the vector is the name of the field. The name is used for form values, and is the default label for a field, if label is not specified.
+fields is a seq of fields, or a function that returns a seq of
+fields. If fields is a fn, it will be called with one argument, the
+map.
+
+Each field is a vector. The first element in the vector is the name of
+the field. The name is used for form values, and is the default label
+for a field if label is not specified.
 
    The rest of the vector is a map of arguments. The following keys are recognized:
    :label - This is an html label, used in data and form contexts. When not specified, inferred from name.
-   :value - The value to display. May be a literal or a fn of one argument, the input map. If not specified, the value will be looked up in the map using name as the key. 
+   :value - The value to display. If not specified, the value will be looked up in the map using name as the key. 
    :type - The data type of the field. This is used to read, and specifies the default rendering. When rendering and type is not specified, inferred to be (type value). When reading and not specified, type is assumed to be :string
    :display-as - Overrides the default rendering; must be a value that render-block understands. Many values will consume extra optional arguments in the field map, consult the documentation for those.
 
    :dom-id
    :css-class
    :css-style
- 
+
+Note that when reading, the input map will be nil, so the fn should correctly produce the required fields even with a nil input map.
+
    :writer - an optional fn. Takes the input map. Returns another map which will be used as the input to :fields. Do arbitrary pre-processing of the map here.
    :reader - optional fn. Called after reading the map in from an http post. Takes one argument, the read in map. do arbitrary post-processing here. "
   
@@ -129,30 +141,29 @@ The view defines several functions. :fields, :reader, :writer. :fields is requir
      :value value
      :label (or (:label options) (humanize name))}))
 
-(defn call-fns-of-map [field map]
-  (reduce (fn [field [key value]]
-            (if (fn? value)
-              (assoc field key (value map))
-              field)) field field))
-
-(defn get-view-blocks [view map]
+(defn get-fields [view map]
   (let [map (if-let [reader-fn (:reader view)]
               (reader-fn map)
-              map)]
-    (for [field (:fields view)
-          :let [defaults (get-defaults map field)
-                [name options] field
-                options (merge defaults options)
-                options (call-fns-of-map options map)
-                options (if (:type options)
-                          options
-                          (merge options {:type (or (type (:value options)) :string)}))]]
-      (make-block options))))
+              map)
+        fields (if (fn? (:fields view))
+                 ((:fields view) map)
+                 (:fields view))]
+    fields))
+
+(defn get-view-blocks [view map]
+  (for [field (get-fields view map)
+        :let [defaults (get-defaults map field)
+              [name options] field
+              options (merge defaults options)
+              options (if (:type options)
+                        options
+                        (merge options {:type (or (type (:value options)) :string)}))]]
+    (make-block options)))
 
 (defn read-view
   "Reads in the values from an HTTP params map, using a view created by defview. Returns a clojure map. "
   [view params]
-  (let [obj (into {} (for [block (get-view-blocks view {})
+  (let [obj (into {} (for [block (get-view-blocks view nil)
                            :let [{name :name
                                   type :type} block]]
                        (do
@@ -166,10 +177,13 @@ The view defines several functions. :fields, :reader, :writer. :fields is requir
 (defmulti render-view-blocks (fn [blocks context]
                                 context))
 
-(defn render-view [view context map]
+(defn render-view
+  "renders a view to html. Extra keyword arguments will be merged into map"
+  [view context map & kw-args]
   (let [map (if-let [writer-fn (:writer view)]
               (writer-fn map)
-              map)]
+              map)
+        map (merge map (apply hash-map kw-args))]
     (render-view-blocks (get-view-blocks view map) context)))
 
 (load "builtins")

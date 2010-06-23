@@ -50,6 +50,19 @@
                (fn [e]
                  (clj fn-action)))))
 
+(defn on-change
+  [selector action]
+  (js* (.change (jQuery (clj selector))
+                (fn [e]
+                  (clj action)))))
+
+;; (defn ajax-js
+;;   "returns a javascript function that when called, will make an ajax request to call fn, clojure code, on the server. fn should return javascript that will be eval'd by the client.  
+;;  Can be used in jQuery event handlers, i.e.
+
+;; (on-change \"#foo\" (ajax-js #(some-clojure-code)) "
+;;   [fn])
+
 (defn progress-spinner [selector]
   "replaces selector with an progress spinner"
   (let [html

@@ -136,15 +136,22 @@
 ;;===========
 
 (defn render-select [block]
-  [:select
-   (->
-    block
-    (select-keys [:dom-id :css-class :css-style :multiple :disabled :name])
-    (clojure.set/rename-keys {:dom-id :id :css-class :class :css-style :style}))
-   (for [[label value] (:allowed-values block)]
-     [:option {:label label
-               :selected (= value (:value block))
-               :value value}])])
+  (let [id (or (:dom-id block) (gensym "select"))]
+    (list [:select
+      (->
+       block
+       (select-keys [:css-class :css-style :multiple :disabled :name])
+       (clojure.set/rename-keys {:css-class :class :css-style :style})
+       (merge {:id id}))
+           (for [[label value] (:allowed-values block)]
+             [:option {:label label
+                       :selected (= value (:value block))
+                       :value value}])]
+          (when (:on-change-js block)
+            (js/script
+             (js/on-ready
+              (js/on-change (js/id id)
+               (js* (.getScript jQuery (str (clj (actions/action-url! (:on-change-js block))) "&value=" (. (jQuery (clj (str (js/id id) " option:selected"))) attr "value")))))))))))
 
 (defmethod render-block [:dropdown :any-context] [block context]
   (render-select block))

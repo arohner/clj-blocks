@@ -5,17 +5,17 @@
    (for [block blocks]
      [:td (render-block block :table)])])
 
-(defn table-header [view]
+(defn table-header [fields]
   [:thead
    [:tr
-    (for [field (:fields view)]
+    (for [field fields]
       [:th (get-label field)])]])
 
 (defn with-table
   "produces an HTML table containing rows, all rendered as type model"
   [view rows & {:keys [id]}]
   [:table {:id id}
-   (table-header view)
+   (table-header (get-fields view (first rows)))
    [:tbody
     (when (seq rows)
       (for [row rows]

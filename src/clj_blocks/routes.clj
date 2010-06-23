@@ -7,16 +7,36 @@
   (:require [compojure.core :as compojure]))
 
 (defmacro defroutefn
-  "Defines a defn, and associates it with a URL route. The defined fn
-  takes one argument, the request. The call to defroutefn must be in a
-  namespace using ns-routes"
+  "Creates a function that can be called normally, or in response to an
+   HTTP request.
 
-  [name [http-method http-path] & defn-args]
+  View is an optional argument, a view created with defview. 
+
+  If a view is used, when the fn is called as an HTTP request, the
+  arguments will be taken from the http params map, read using
+  read-view, and then passed to the fn. When the fn is called in
+  normal clojure code, read-view will not be called, so the the
+  argument should be the correct type
+
+  If the function has & args, the & arg will be a map containing
+  params in the request map that weren't bound to a positional
+  argument.
+
+  The call to defroutefn must be in a namespace using ns-routes.
+
+  Requires the wrap-read-view middleware"
+
+  [name [http-method http-path view?] & defn-args]
   (let [defn-args (cons name defn-args)
         arg-map (apply decompose-defn-args* defn-args)
-        arg-map (update-in arg-map [:attr-map] merge {::http-method http-method
-                                                      ::http-path http-path
-                                                      ::bindings `(quote ~(:params arg-map))})]
+        params (:params arg-map)
+        arg-map (update-in arg-map [:attr-map] merge
+                           {::http-method http-method
+                            ::http-path http-path
+                            ::bindings (if (and (= 1 (count params)) (map? (first params)))
+                                         `(quote ~(first params))
+                                         `(quote ~(:params arg-map)))
+                            ::view view?})]
     `(defn ~@(defn-map* arg-map))))
 
 (defn find-route-fns
@@ -34,11 +54,10 @@
        (do
          (assert fn-name)
          (assert ns)
-         (let [f (ns-resolve ns (symbol (clojure.core/name fn-name)))
-               path (format path name)]
+         (let [f (ns-resolve ns (symbol (clojure.core/name fn-name)))]
            (when f
              (println "adding route" http-method path "->" fn-name)
-             [http-method path fn-binding f]))))
+             (compojure/compile-route* http-method path fn-binding f)))))
      (filter identity))))
   
 (defmacro ns-routes
@@ -88,23 +107,9 @@ call-matching-route."
       (handler request))))
 
 (defmacro def-webfn
-  "Creates a function that can be called normally, or served as an
-  HTTP request. View is a view created with defview.
-
-  When the fn is called as an HTTP request, the arguments will be
-  taken from the http params map, read using read-view, and then
-  passed to the fn. If the function has & args, the & arg will be a
-  map containing params in the request map that weren't bound to a
-  positional argument.
-
-  When the fn is called in normal clojure code, read-view will not be
-  called, so the the argument should be the correct type
-
-  Requires the wrap-read-view middleware"
+  ""
   
   [name [http-method http-path] view signature & body]
   `(defroutefn ~name [~http-method ~http-path] {::view ~view} ~signature
      ~@body))
-
-(defn def-block )
 
