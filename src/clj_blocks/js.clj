@@ -66,12 +66,19 @@
 (defn progress-spinner [selector]
   "replaces selector with an progress spinner"
   (let [html
-        (html [:p [:img {:src "/gif/progress-spinner.gif"}]])]
+        (html [:p {:class "clj-blocks-progress-spinner"} [:img {:src "/gif/progress-spinner.gif"}]])]
     ;; hide the original element, then insert the spinner
     ;; afterwards. If we replace the original element, we would break
     ;; e.g. forms that are about to be submitted.
     (js* (. (jQuery (clj selector)) hide)
          (. (jQuery (clj selector)) after (clj html)))))
+
+(defn cancel-progress-spinner [selector]
+  "undos a progress spinner. Pass in the same selector used to create the progress spinner"
+  (let [progress-selector (format "%s + \\.%s" selector "clj-blocks-progress-spinner")]
+    (js* (do
+         (. (jQuery (clj progress-selector)) remove)
+         (. (jQuery (clj selector)) show)))))
 
 (defn ajax-post-form [url form-selector on-success]
   "does an AJAX POST to url. form-selector is a jquery selector that identifies the form to serialize. on-success is a js function that gets called with the body on success"
