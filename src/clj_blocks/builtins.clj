@@ -34,7 +34,7 @@
   "returns a map of the 'standard' elements in a block, in an appropriate form for html attributes"
   [block]
   (-> block
-      (clojure.set/rename-keys {:dom-id :id
+      (rename-keys* {:dom-id :id
                                 :css-class :class
                                 :css-style :style})
       (select-keys [:id :class :style])))
@@ -42,7 +42,7 @@
 (defn standard-html-form-attrs
   [block]
   (-> block
-      (clojure.set/rename-keys {:dom-id :id
+      (rename-keys* {:dom-id :id
                                 :css-class :class
                                 :css-style :style})
       (select-keys [:id :class :style :name :value])))
