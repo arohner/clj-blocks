@@ -1,12 +1,12 @@
 (defproject clj-blocks
-  "0.0.4"
+  "0.0.5"
   :description "a web framework inspired by Weblocks"
   :dependencies [[org.clojure/clojure "1.2.0-master-SNAPSHOT"]
                  [org.clojure/clojure-contrib "1.2.0-SNAPSHOT"]
                  [sandbar "0.2.3"]
-                 [org.clojars.arohner/hiccup "34e8acde6f79da1f2680a95842476f64e8d90b59"]                 
+                 [org.clojars.arohner/hiccup "44cbc6e1a1534d1ad32b8bbdf6424d3ecd788192"]
                  [clout "0.2.0"]
-                 [compojure "0.4.0-SNAPSHOT"]
+                 [org.clojars.arohner/compojure "41a61347414ac54eadc496fb5bb7f4b25955cd4c"]
 		 [ring/ring-core "0.2.0"]
 		 [ring/ring-devel "0.2.0"]
 		 [ring/ring-jetty-adapter "0.2.0"]
