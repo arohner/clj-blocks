@@ -17,9 +17,7 @@
   (:use [clojure.contrib.except :only (throwf)])
   (:require [clj-blocks.js :as js])
   (:require [clj-blocks.actions :as actions])
-  (:use [com.reasonr.scriptjure :only (js js*)])
-
-  )
+  (:use [com.reasonr.scriptjure :only (js js*)]))
 
 ;;;; UI framework for building web pages quickly. Inspired by weblocks
 ;;;; and Ian Eslick.

@@ -15,11 +15,43 @@
 (defmethod validate-block :default [block & _]
   true)
 
+;; The official rename-keys is currently broken with defrecords. Remove this after
+;; https://www.assembla.com/spaces/clojure/tickets/393-fix-rename-keys-to-work-with-defrecords
+;; is fixed
+(defn rename-keys*
+  "Returns the map with the keys in kmap renamed to the vals in kmap"
+  {:added "1.0"}
+  [map kmap]
+    (reduce 
+     (fn [m [old new]]
+       (if (and (not= old new)
+                (contains? m old))
+         (-> m (assoc new (get m old)) (dissoc old))
+         m)) 
+     map kmap))
+
+(defn standard-html-attrs
+  "returns a map of the 'standard' elements in a block, in an appropriate form for html attributes"
+  [block]
+  (-> block
+      (clojure.set/rename-keys {:dom-id :id
+                                :css-class :class
+                                :css-style :style})
+      (select-keys [:id :class :style])))
+
+(defn standard-html-form-attrs
+  [block]
+  (-> block
+      (clojure.set/rename-keys {:dom-id :id
+                                :css-class :class
+                                :css-style :style})
+      (select-keys [:id :class :style :name :value])))
+
 (defn standard-form-field [block]
   {:pre [(instance? clj-blocks.core.block block)]}
   (html
    [:input (merge {:type "textfield"}
-                  (map-vals str (select-keys block [:id :class :style :name :value])))]))
+                  (standard-html-form-attrs block))]))
 ;;=========
 ;; Bools
 ;;=========
@@ -32,7 +64,7 @@
      [:label {:for (:name block)} (:prompt block)])
    [:input (merge {:type "checkbox"}
                   {:checked (boolean (:value block))}
-                  (map-vals str (select-keys block [:id :class :style :name :value])))]))
+                  (standard-html-form-attrs block))]))
 
 (defmethod render-block [:checkbox :form] [block _]
   (form/check-box (:name block) (boolean (:value block))))
@@ -129,7 +161,9 @@
   (str "[" (str/join " " (map #(render % context) (:value block))) "]"))
 
 (defmethod render-block [:link :any-context] [block context]
-  [:a {:href (:link-to block)} (:value block)])
+  [:a (merge
+       {:href (:link-to block)}
+       (standard-html-attrs block)) (:value block)])
 
 ;;===========
 ;; Select / Dropdown / Multiselect
@@ -138,13 +172,10 @@
 (defn render-select [block]
   (let [id (or (:dom-id block) (gensym "select"))]
     (list [:select
-      (->
-       block
-       (select-keys [:css-class :css-style :multiple :disabled :name])
-       (clojure.set/rename-keys {:css-class :class :css-style :style})
-       (merge {:id id}))
+           (standard-html-form-attrs block)
            (for [[label value] (:allowed-values block)]
-             [:option {:label label
+             [:option {:id (str id "_" value)
+                       :label label
                        :selected (= value (:value block))
                        :value value}])]
           (when (:on-change-js block)
@@ -160,4 +191,4 @@
   (render-select (assoc block :multiple true)))
 
 (defmethod render-block [:hidden :form] [block _]
-  [:input {:type :hidden :name (:name block) :value (:value block)} ])
+  [:input {:type :hidden :name (:name block) :value (:value block)}])
