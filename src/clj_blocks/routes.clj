@@ -67,7 +67,10 @@
 
 (defn path-for* [routefn route-args]
   {:pre [routefn]}
-  (let [path (-> routefn meta ::http-path)]
+  (let [path (-> routefn meta ::http-path)
+        path (if (string? path)
+               path
+               (first path))]
     (when (not path)
       (throwf "no route metadata on %s" routefn))
     (reduce (fn [path [key val]]
