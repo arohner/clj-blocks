@@ -30,6 +30,9 @@
   (let [defn-args (cons name defn-args)
         arg-map (apply decompose-defn-args* defn-args)
         params (:params arg-map)
+        http-method (if (= :any http-method)
+                      nil
+                      http-method)
         arg-map (update-in arg-map [:attr-map] merge
                            {::http-method http-method
                             ::http-path http-path
