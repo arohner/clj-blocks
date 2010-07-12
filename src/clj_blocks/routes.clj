@@ -42,7 +42,7 @@
 (defn find-route-fns
   "introspects the namespace, returns a seq of [fn-name http-method path] vecs"
   [ns]
-  (for [[name var-fn] (ns-publics ns) :when (::http-method (meta var-fn))
+  (for [[name var-fn] (ns-publics ns) :when (::http-path (meta var-fn))
         :let [metadata (meta var-fn)]]
     [(keyword name) (::bindings metadata) (::http-method metadata) (::http-path metadata)]))
 
