@@ -127,6 +127,35 @@
 (defmethod read-block :keyword [s _]
   (assert (string? s))
   (keyword s))
+
+;;========
+;; Dates
+;;========
+
+(defn date-formatter []
+  (java.text.SimpleDateFormat. "EEE MMM dd HH:mm:ss yyyy")) ;; SimpleDateFormat is not re-entrant
+
+(derive-ref h Long :date)
+
+(defn- date-as-string [dateInMillis]
+ (let [cal (java.util.Calendar/getInstance)]
+   (.setTimeInMillis cal dateInMillis)
+   (.format (date-formatter) (.getTime cal))))
+
+(defmethod render-block [:date :data] [block _]
+ (date-as-string (:value block)))
+
+(defmethod render-block [:date :table] [block _]
+ (date-as-string (:value block)))
+
+(defmethod render-block [:date :form] [block _]
+ (standard-form-field block (date-as-string (:value block))))
+
+(defmethod read-block :date [string _]
+ (if string
+   (java.util.Date/parse string)
+   nil))
+
 ;;========================
 ;; Default Object handling
 ;;========================
@@ -192,3 +221,5 @@
 
 (defmethod render-block [:hidden :form] [block _]
   [:input {:type :hidden :name (:name block) :value (:value block)}])
+
+
