@@ -1,9 +1,7 @@
 (defproject clj-blocks
-  "0.0.6"
+  "0.0.7"
   :description "a web framework inspired by Weblocks"
-  :dependencies [[org.clojure/clojure "1.2.0-master-SNAPSHOT"]
-                 [org.clojure/clojure-contrib "1.2.0-SNAPSHOT"]
-                 [sandbar "0.2.3" :exclusions [hiccup ring/ring-core sandbar-session compojure]]
+  :dependencies [[sandbar "0.2.3" :exclusions [hiccup ring/ring-core sandbar-session compojure]]
                  [sandbar/sandbar-core "0.3.0" :exclusions [hiccup]]
                  [org.clojars.arohner/sandbar-session "cd7bb1a8ad844dbef623a76353a6529ed3ce1f67"]
                  [org.clojars.arohner/hiccup "9bab3bd8bedbfcbd13e2ba278798615dd2895346"]

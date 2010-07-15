@@ -185,5 +185,6 @@ Note that when reading, the input map will be nil, so the fn should correctly pr
     (render-view-blocks (get-view-blocks view map) context)))
 
 (load "builtins")
+(load "data")
 (load "table")
 (load "form")
