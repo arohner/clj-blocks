@@ -63,7 +63,9 @@
   :hierarchy h)
 
 (defmulti validate-block
-  "returns truthy if object is valid. Optionally takes a type to dispatch on, in case it can't be inferred from the type of the value, i.e. :positive-int. Returns true by default."
+  "returns truthy if object is valid. Optionally takes a type to
+dispatch on, in case it can't be inferred from the type of the value,
+i.e. :positive-int. Returns true by default."
   (fn
     ([val type]
        type)
