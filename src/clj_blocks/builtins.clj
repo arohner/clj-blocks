@@ -221,5 +221,3 @@
 
 (defmethod render-block [:hidden :form] [block _]
   [:input {:type :hidden :name (:name block) :value (:value block)}])
-
-

@@ -27,6 +27,8 @@
   Requires the wrap-read-view middleware"
 
   [name [http-method http-path view?] & defn-args]
+  (assert (keyword? http-method))
+  (assert (string? http-path))
   (let [defn-args (cons name defn-args)
         arg-map (apply decompose-defn-args* defn-args)
         params (:params arg-map)
