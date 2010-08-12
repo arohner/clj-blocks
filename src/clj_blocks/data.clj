@@ -6,5 +6,4 @@
          :let [body (render-block block :data)]]
      [:div {:class "clj-block-value"}
       (with-label block
-        body)
-      body])])
+        body)])])
