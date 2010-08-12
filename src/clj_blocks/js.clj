@@ -95,3 +95,10 @@
   (js* (. jQuery get (clj url)
           (fn [data, status, request]
             (. (jQuery (clj selector)) replaceWith data)))))
+
+(defn data-table
+  "enables jQuery dataTable plugin on table with id id"
+  [id & [options]]
+  (println "data-table:" options)
+  (js* (.dataTable (jQuery (clj (clj-blocks.js/id id)))
+                   (clj options))))

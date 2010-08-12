@@ -13,10 +13,13 @@
 
 (defn with-table
   "produces an HTML table containing rows, all rendered as type model"
-  [view rows & {:keys [id]}]
-  [:table {:id id}
+  [view rows & {:keys [id options]}]
+  (list
+   [:table {:id id}
    (table-header (get-fields view (first rows)))
    [:tbody
     (when (seq rows)
       (for [row rows]
-        (render-view view :table row)))]])
+        (render-view view :table row)))]]
+   (when id
+     (js/script (js/on-ready (js/data-table id options))))))
