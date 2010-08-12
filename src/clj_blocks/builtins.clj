@@ -221,3 +221,7 @@
 
 (defmethod render-block [:hidden :form] [block _]
   [:input {:type :hidden :name (:name block) :value (:value block)}])
+
+(defmethod render-block [:post-action :table] [block _]
+  (form/form-to [:post (:url block)] 
+      (form/submit-button (:name block))))
