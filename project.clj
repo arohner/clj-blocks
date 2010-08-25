@@ -1,5 +1,5 @@
 (defproject clj-blocks
-  "0.0.10"
+  "0.0.12"
   :description "a web framework inspired by Weblocks"
   :dependencies [[sandbar "0.2.3" :exclusions [hiccup ring/ring-core sandbar-session compojure]]
                  [sandbar/sandbar-core "0.3.0" :exclusions [hiccup]]
