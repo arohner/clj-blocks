@@ -199,7 +199,8 @@
 ;;===========
 
 (defn render-select [block]
-  (let [id (or (:dom-id block) (gensym "select"))]
+  (let [id (or (:dom-id block) (gensym "select"))
+        block (assoc block :dom-id id)]
     (list [:select
            (standard-html-form-attrs block)
            (for [[label value] (:allowed-values block)]
