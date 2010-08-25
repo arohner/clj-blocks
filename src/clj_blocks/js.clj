@@ -33,6 +33,15 @@
   [selector]
   (js* (. (jQuery (clj selector)) hide "fast")))
 
+(defn hidden-div
+  "returns a link that when clicked, shows body"
+  [{:keys [div-id link-id link-text]} & body]
+  (let [div-id (or div-id (gensym))]
+    (html
+     [:div {:id div-id :style "display: none;"}
+      (list body)]
+     (link {:id link-id} (or link-text "Show") (show-div (id div-id))))))
+
 (defn redirect
   [url]
   (format "window.location.replace(\"%s\")" url))
