@@ -108,6 +108,5 @@
 (defn data-table
   "enables jQuery dataTable plugin on table with id id"
   [id & [options]]
-  (println "data-table:" options)
   (js* (.dataTable (jQuery (clj (clj-blocks.js/id id)))
                    (clj options))))

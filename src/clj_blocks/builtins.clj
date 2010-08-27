@@ -224,5 +224,6 @@
   [:input {:type :hidden :name (:name block) :value (:value block)}])
 
 (defmethod render-block [:post-action :table] [block _]
-  (form/form-to [:post (:url block)] 
-      (form/submit-button (:name block))))
+  (form/form-to [:post (:url block)]
+                [:input {:type "submit" :value (:name block)
+                         :disabled (or (:disabled block) nil)}]))
