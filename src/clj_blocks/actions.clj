@@ -33,8 +33,7 @@
         action-fn (get-action aid)]
     (assert aid)
     (assert action-fn)
-    (action-fn (:params request))
-    (redirect (get-in request [:headers "referer"]))))
+    (action-fn (:params request))))
 
 (def *action-path* nil)
 

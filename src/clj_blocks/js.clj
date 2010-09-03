@@ -1,12 +1,22 @@
 (ns clj-blocks.js
   (:use [com.reasonr.scriptjure :only (js js* cljs)])
-  (:use [hiccup.core :only (html)]))
+  (:use (hiccup core page-helpers form-helpers)))
 
 (defn link
   "makes a link that calls javascript when clicked"
   [attrs text js-code]
   (html [:a (merge attrs {:href "#" :onclick (js (clj js-code)
                                                  (return false))}) text]))
+
+(defn button
+  [attrs text js-code]
+  [:form {:method "POST" :action "#"}
+   [:input (merge 
+                  {:type "submit"
+                   :onClick (js (clj js-code)
+                                (return false))
+                   :value text}
+                  attrs)]])
 
 (defn script
   "makes an HTML tag that contains javascript. js should either be a string literal or a fragment that can be compiled with scriptjure"
