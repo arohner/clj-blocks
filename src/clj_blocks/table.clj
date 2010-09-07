@@ -12,8 +12,14 @@
       [:th (get-label field)])]])
 
 (defn with-table
-  "produces an HTML table containing rows, all rendered as type model. Uses the keys on the first row for columns."
-  [view rows & {:keys [id options]}]
+  "produces an HTML table containing rows, all rendered as type model. Uses the keys on the first row for columns.
+
+Recognized keys:
+
+id - the id for the table element
+options - a map of options for datatables. Anything recognized by the datatables constructor is valid
+table-var-name - a string or symbol specifying a javascript variable name for the datatables object"
+  [view rows & {:keys [id options table-var-name]}]
   (list
    [:table {:id id
             :class "display"}
@@ -22,8 +28,12 @@
      (when (seq rows)
        (for [row rows]
          (render-view view :table row)))]]
-   (when id
-     (js/script (js/on-ready (js/data-table id options))))))
+   (let [table-var (or (symbol table-var-name) (gensym "table"))]
+     (when id
+       (list
+        (js/script
+         (js/on-ready
+          (js* (var (clj table-var) (clj (js/data-table id options)))))))))))
 
 (defn to-data-table
   "given a seq of rows from the database, orders them appropriately"
