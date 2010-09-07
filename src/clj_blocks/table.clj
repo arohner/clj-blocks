@@ -19,7 +19,7 @@ Recognized keys:
 id - the id for the table element
 options - a map of options for datatables. Anything recognized by the datatables constructor is valid
 table-var-name - a string or symbol specifying a javascript variable name for the datatables object"
-  [view rows & {:keys [id options table-var-name]}]
+  [view rows & {:keys [id datatables options table-var-name]}]
   (list
    [:table {:id id
             :class "display"}
@@ -28,8 +28,8 @@ table-var-name - a string or symbol specifying a javascript variable name for th
      (when (seq rows)
        (for [row rows]
          (render-view view :table row)))]]
-   (let [table-var (or (symbol table-var-name) (gensym "table"))]
-     (when id
+   (let [table-var (or (when table-var-name (symbol table-var-name)) (gensym "table"))]
+     (when (and id datatables)
        (list
         (js/script
          (js/on-ready
