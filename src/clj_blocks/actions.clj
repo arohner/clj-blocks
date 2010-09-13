@@ -33,7 +33,7 @@
         action-fn (get-action aid)]
     (assert aid)
     (assert action-fn)
-    (action-fn (:params request))))
+    (action-fn request)))
 
 (def *action-path* nil)
 

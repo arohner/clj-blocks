@@ -9,7 +9,6 @@
 (derive-ref h :form :any-context)
 
 (defmethod render-block :default [block context]
-  {:pre [(instance? clj-blocks.core.block block)]}
   (str (:value block)))
 
 (defmethod validate-block :default [block & _]
@@ -33,11 +32,14 @@
 (defn standard-html-attrs
   "returns a map of the 'standard' elements in a block, in an appropriate form for html attributes"
   [block]
-  (-> block
-      (rename-keys* {:dom-id :id
-                                :css-class :class
-                                :css-style :style})
-      (select-keys [:id :class :style])))
+  (->>
+   (-> block
+       (rename-keys* {:dom-id :id
+                      :css-class :class
+                      :css-style :style})
+       (select-keys [:id :class :style]))
+   (filter (fn [[key val]] (identity val)))
+   (into {})))
 
 (defn standard-html-form-attrs
   [block]
@@ -48,7 +50,6 @@
       (select-keys [:id :class :style :name :value])))
 
 (defn standard-form-field [block]
-  {:pre [(instance? clj-blocks.core.block block)]}
   (html
    [:input (merge {:type "textfield"}
                   (standard-html-form-attrs block))]))
@@ -67,7 +68,10 @@
                   (standard-html-form-attrs block))]))
 
 (defmethod render-block [:checkbox :form] [block _]
-  (form/check-box (:name block) (boolean (:value block))))
+  (form/check-box {:id (:dom-id block)} (:name block) (boolean (:value block))))
+
+(defmethod render-block [:checkbox :table] [block _]
+  (form/check-box {:id (:dom-id block)} (:name block) (boolean (:value block))))
 
 (defmethod read-block :bool [val-str _]
   (if (= val-str "true")
@@ -163,7 +167,6 @@
 (derive-ref h clojure.lang.IPersistentMap :map)
 
 (defn render-nested-blocks [object context]
-  ;{:pre [(instance? block object)]}
   (for [[name val] object
         :let [block (make-block {:type (type val) :value val :name name :label name})]]
     [:div {:class "clj-block-value"}
@@ -171,7 +174,6 @@
        (render-block block context))]))
 
 (defmethod render-block [:map :data] [block _]
-  {:pre (instance? clj-blocks.core.block block)}
   [:div {:class "clj-block-object"}
    (render-nested-blocks (:value block) :data)])
 
@@ -202,12 +204,13 @@
   (let [id (or (:dom-id block) (gensym "select"))
         block (assoc block :dom-id id)]
     (list [:select
-           (standard-html-form-attrs block)
+           (assoc (standard-html-form-attrs block) :multiple (:multiple block))
            (for [[label value] (:allowed-values block)]
              [:option {:id (str id "_" value)
                        :label label
                        :selected (= value (:value block))
-                       :value value}])]
+                       :value value}
+              label])]
           (when (:on-change-js block)
             (js/script
              (js/on-ready

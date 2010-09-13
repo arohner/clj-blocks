@@ -106,7 +106,7 @@ for a field if label is not specified.
    The rest of the vector is a map of arguments. The following keys are recognized:
    :label - This is an html label, used in data and form contexts. When not specified, inferred from name.
    :value - The value to display. If not specified, the value will be looked up in the map using name as the key. 
-   :type - The data type of the field. This is used to read, and specifies the default rendering. When rendering and type is not specified, inferred to be (type value). When reading and not specified, type is assumed to be :string
+   :type - The data type of the field. This is used to read, and specifies the default rendering. When rendering and type is not specified, inferred to be (clojure.core/type value). When reading and not specified, type is assumed to be :string
    :display-as - Overrides the default rendering; must be a value that render-block understands. Many values will consume extra optional arguments in the field map, consult the documentation for those.
 
    :dom-id
