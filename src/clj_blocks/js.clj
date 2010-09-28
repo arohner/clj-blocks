@@ -130,7 +130,7 @@
 (defn progress-spinner [selector]
   "replaces selector with an progress spinner"
   (let [html
-        (hiccup.core/html [:p {:class "clj-blocks-progress-spinner"} [:img {:src "/gif/progress-spinner.gif"}]])]
+        (hiccup.core/html [:div {:class "clj-blocks-progress-spinner"} [:img {:src "/gif/progress-spinner.gif"}]])]
     ;; hide the original element, then insert the spinner
     ;; afterwards. If we replace the original element, we would break
     ;; e.g. forms that are about to be submitted.
@@ -141,8 +141,8 @@
   "undos a progress spinner. Pass in the same selector used to create the progress spinner"
   (let [progress-selector (format "%s + \\.%s" selector "clj-blocks-progress-spinner")]
     (js* (do
-         (. (jQuery (clj progress-selector)) remove)
-         (. (jQuery (clj selector)) show)))))
+           (. (jQuery (clj progress-selector)) hide)
+           (. (jQuery (clj selector)) show)))))
 
 (defn ajax-post-form [url form-selector on-success]
   "does an AJAX POST to url. form-selector is a jquery selector that identifies the form to serialize. on-success is a js function that gets called with the body on success"
@@ -157,7 +157,10 @@
 
 (defn ajax-update [selector url]
   "JS snippet calls jquery .load()"
-  (js* (. (jQuery (clj selector)) load (clj url))))
+  (js* (do
+         (. (jQuery (clj selector)) load (clj url) (fn []
+                                                     (clj (cancel-progress-spinner selector)))
+            ))))
 
 (defn ajax-replace [selector url]
   "JS snippet replaces selector with the content from URL. differs from ajax-update in that it will replace the entire node, rather than the content of the node"

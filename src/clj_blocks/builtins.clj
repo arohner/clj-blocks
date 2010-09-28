@@ -200,6 +200,12 @@
 ;; Select / Dropdown / Multiselect
 ;;===========
 
+(defn cast-dropdown-value [value]
+  (cond
+   (string? value) value
+   (instance? Boolean value) (keyword (str value))
+   :else (str value)))
+
 (defn render-select [block]
   (let [id (or (:dom-id block) (gensym "select"))
         block (assoc block :dom-id id)]
@@ -209,7 +215,8 @@
              [:option {:id (str id "_" value)
                        :label label
                        :selected (= value (:value block))
-                       :value value}
+                       :name (cast-dropdown-value value)
+                       :value (cast-dropdown-value value)}
               label])]
           (when (:on-change-js block)
             (js/script
