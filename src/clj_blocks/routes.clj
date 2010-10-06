@@ -50,23 +50,40 @@
         :let [metadata (meta var-fn)]]
     [(keyword name) (::bindings metadata) (::http-method metadata) (::http-path metadata)]))
 
-(defn ns-routes* [ns-symbol]
+(defn ns-routes-sym [ns-symbol]
   (require ns-symbol)
   (let [ns (find-ns ns-symbol)]
-    (->>
-     (for [[fn-name fn-binding http-method path] (find-route-fns ns)]
-       (do
-         (assert fn-name)
-         (assert ns)
-         (let [f (ns-resolve ns (symbol (clojure.core/name fn-name)))]
-           (when f
-             (println "adding route" http-method path "->" fn-name)
-             (compojure/compile-route* http-method path fn-binding f)))))
-     (filter identity))))
-  
+    (doall
+     (->>
+      (for [[fn-name fn-binding http-method path] (find-route-fns ns)]
+        (do
+          (assert fn-name)
+          (assert ns)
+          (let [f (ns-resolve ns (symbol (clojure.core/name fn-name)))]
+            (when f
+              (println http-method path "->" (str ns-symbol "/" (name fn-name)))
+              (compojure/compile-route* http-method path fn-binding f)))))
+      (filter identity)))))
+
+(defn ns-routes-prefix-list [[ns-base & symbols]]
+  (apply concat (for [sym symbols]
+                  (ns-routes-sym (symbol (str ns-base "." sym))))))
+
+(defn ns-routes* [ns-seq]
+  (doall (apply concat (for [ns ns-seq]
+                         (cond
+                          (symbol? ns) (ns-routes-sym ns)
+                          (list? ns) (ns-routes-prefix-list ns))))))
+
 (defmacro ns-routes
-  "Returns the set of routes in ns defined using defroutefn"
-  [ns]
+  "Returns the set of routes in ns defined using defroutefn. Takes any number of namespaces or prefix lists like use and require.
+
+  examples:
+
+  (ns-routes foo.bar foo.baz) ;; returns the routes in namespaces foo.bar, foo.baz
+  (ns-routes (foo bar baz))   ;; same as above
+ "
+  [& ns]
   `(ns-routes* (quote ~ns)))
 
 (defn path-for* [routefn route-args]
