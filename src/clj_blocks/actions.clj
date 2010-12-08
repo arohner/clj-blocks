@@ -1,7 +1,6 @@
 (ns clj-blocks.actions
   (:use [ring.util.response :only (redirect)])
   (:require [compojure.core :as compojure])
-  (:require [clojure.contrib.string :as str])
   (:use [hiccup.core :only (html)])
   (:use [hiccup.page-helpers :only (url link-to)])
   (:require [ring.middleware.keyword-params])

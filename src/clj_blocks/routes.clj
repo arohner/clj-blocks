@@ -1,9 +1,8 @@
 (ns clj-blocks.routes
   (:use [clj-blocks.core :only (read-view)])
   (:use clj-blocks.utils)
-  (:use [clojure.contrib.except :only (throwf)])
   (:require ring.middleware.keyword-params)
-  (:require [clojure.contrib.string :as str])
+  (:require [clojure.string :as str])
   (:require [compojure.core :as compojure]))
 
 (defmacro defroutefn
@@ -62,7 +61,9 @@
           (let [f (ns-resolve ns (symbol (clojure.core/name fn-name)))]
             (when f
               (println http-method path "->" (str ns-symbol "/" (name fn-name)))
-              (compojure/compile-route* http-method path fn-binding f)))))
+              (if (fn? path)
+                [http-method path fn-binding f]
+                (compojure/compile-route* http-method path fn-binding f))))))
       (filter identity)))))
 
 (defn ns-routes-prefix-list [[ns-base & symbols]]
@@ -93,10 +94,10 @@
                path
                (first path))]
     (when (not path)
-      (throwf "no route metadata on %s" routefn))
+      (throw (Exception. (format "no route metadata on %s" routefn))))
     (reduce (fn [path [key val]]
               (assert (keyword? key))
-              (str/replace-str (str key) (str val) path)) path route-args)))
+              (str/replace-str path (str key) (str val))) path route-args)))
 
 (defmacro path-for
   "Returns the URL path for a var defined using defroutefn. If the route contains any variables, i.e. /foo/:id, route-args is a map of keywords to values to replace.

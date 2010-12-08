@@ -1,5 +1,5 @@
 (ns clj-blocks.utils
-  (:require [clojure.contrib.string :as str]))
+  (:require [clojure.string :as str]))
 
 (defn map-keys [f m]
   "returns a new map with f applied to the keys of the map"
@@ -37,7 +37,7 @@
 (defn decompose-defn-args* [& args]
   (letfn [(parse-name [args]
                       (assert (symbol? (first args)))
-                      [(first args) (rest args)])
+                      [(first args) (rest args)])          
           (parse-doc-string [args]
                             (if (string? (first args))
                               [(first args) (rest args)]
@@ -59,7 +59,7 @@
           [body args] (parse-body args)]
       {:name name
        :doc-string doc-string
-       :attr-map attr-map
+       :attr-map (merge attr-map (meta name))
        :params params
        :body body})))
 
@@ -83,8 +83,8 @@
 (defmacro defn-map
   "generates a defn expression, but arguments are a map, to make it
   easier on macro writers. Valid keys: name, doc-string, attr-map,
-  params, body. If params is nil, then body is a multi-arity
-  expression, ([params] body)+ "
+  params, body. If params is nil, then body is assumed to be multi-arity
+  expression, i.e. ([params] body)+ "
   [arg-map]
   `(defn ~@(defn-map* arg-map)))
 

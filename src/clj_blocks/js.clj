@@ -13,11 +13,12 @@
 
 
 (defn post-link
-  [link-attrs {form-name :form-name, url :url, text :text, :as args}]
   "makes an <a href> that performs a POST. Creates a hidden form, and a link with javascript that calls form.submit()
    
    required keys: form-name, url, text
    optional key: hidden-input, a map. Each pair will become an input type=hidden on the form"
+  [link-attrs {form-name :form-name, url :url, text :text, :as args}]
+  
   (assert form-name)
   (hiccup.core/html 
      [:form {:name form-name :method "POST" :action url :style "display:none"}
