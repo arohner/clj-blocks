@@ -97,7 +97,7 @@
       (throw (Exception. (format "no route metadata on %s" routefn))))
     (reduce (fn [path [key val]]
               (assert (keyword? key))
-              (str/replace-str path (str key) (str val))) path route-args)))
+              (str/replace path (str key) (str val))) path route-args)))
 
 (defmacro path-for
   "Returns the URL path for a var defined using defroutefn. If the route contains any variables, i.e. /foo/:id, route-args is a map of keywords to values to replace.

@@ -1,5 +1,5 @@
 (defproject clj-blocks
-  "0.0.21"
+  "0.0.22"
   :description "a web framework inspired by Weblocks"
   :dependencies [[org.clojure/clojure "1.2.0"]
                  [org.clojure/clojure-contrib "1.2.0"]
