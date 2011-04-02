@@ -1,5 +1,6 @@
 (ns clj-blocks.utils
   (:require [clojure.string :as str])
+  (:require clojure.pprint)
   (:use clojure.test))
 
 (defn map-keys [f m]

@@ -46,15 +46,15 @@
   [route]
   (cond
     (string? route)
-      `(route-compile ~route)
+      (route-compile route)
     (vector? route)
-      `(route-compile
-        ~(first route)
-        ~(apply hash-map (rest route)))
+      (route-compile
+        (first route)
+        (apply hash-map (rest route)))
     :else
-      `(if (string? ~route)
-         (route-compile ~route)
-         ~route)))
+      (if (string? route)
+         (route-compile route)
+         route)))
 
 (defn assoc-&-binding [binds req sym]
   (assoc binds sym `(dissoc (:params ~req)
@@ -97,7 +97,8 @@
 (defmacro compile-route
   "Compile a route in the form (method path f) into a route function. f should be a function that takes the arguments specified in bindings"
   [method route bindings f]
-  `(#'if-method ~method
-                (#'if-route ~(prepare-route route)
-                            (fn [request#]
-                              (render (apply-request ~f ~bindings request#) request#)))))
+  `(let [prepared-route# (#'prepare-route ~route)]
+     (#'if-method ~method
+                  (#'if-route prepared-route#
+                              (fn [request#]
+                                (render (apply-request ~f ~bindings request#) request#))))))

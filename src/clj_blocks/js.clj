@@ -20,12 +20,13 @@
   [link-attrs {form-name :form-name, url :url, text :text, :as args}]
   
   (assert form-name)
-  (hiccup.core/html 
+  (let [form-name (gensym form-name)]
+    (hiccup.core/html 
      [:form {:name form-name :method "POST" :action url :style "display:none"}
       (map (fn [[key val]]
 	     (hidden-field key val)) (args :hidden-input))
       (submit-button "submit")]
-     [:a (merge link-attrs {:href (format "javascript:document.%s.submit()" form-name)}) text]))
+     [:a (merge link-attrs {:href (format "javascript:document.%s.submit()" form-name)}) text])))
 
 (defn button
   [attrs text js-code]

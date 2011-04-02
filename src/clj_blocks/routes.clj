@@ -63,7 +63,6 @@
           (assert ns)
           (let [f (ns-resolve ns (symbol (clojure.core/name fn-name)))]
             (when f
-              (println http-method path "->" (str ns-symbol "/" (name fn-name)) fn-binding)
               (compojure/compile-route http-method path fn-binding f)))))
       (filter identity)))))
 
