@@ -1,6 +1,6 @@
 (ns clj-blocks.actions
   (:use [ring.util.response :only (redirect)])
-  (:require [compojure.core :as compojure])
+  (:require [clj-blocks.compojure :as compojure])
   (:use [hiccup.core :only (html)])
   (:use [hiccup.page-helpers :only (url link-to)])
   (:require [ring.middleware.keyword-params])
@@ -52,9 +52,8 @@
 
 (defn wrap-action-handler [handler path]
   "specifies path to be the route that will handle clj-blocks actions"
-  (let [action-route (compojure/compile-route nil path {:as request} (action-handler request))
+  (let [action-route (compojure/compile-route nil path '{:as request} action-handler)
         handler (-> handler
-                    (compojure.core/wrap-routes [action-route])
                     (ring.middleware.keyword-params/wrap-keyword-params))]
     (fn [request]
       (binding [*action-path* path]

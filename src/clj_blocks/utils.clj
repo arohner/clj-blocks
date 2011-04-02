@@ -1,5 +1,6 @@
 (ns clj-blocks.utils
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str])
+  (:use clojure.test))
 
 (defn map-keys [f m]
   "returns a new map with f applied to the keys of the map"
@@ -88,4 +89,29 @@
   [arg-map]
   `(defn ~@(defn-map* arg-map)))
 
+(defn apply-map
+  "Like apply, but if the last argument is a map, will convert the map to work with fn signatures that ends with a map destructuring. i.e.
 
+   (defn foo [ a b & {opt1 :opt1 opt2 :opt2}])
+   (apply-map foo 1 2 {:opt1 42 :opt2 3.14})"
+  [f & args]
+  (let [args (#'clojure.core/spread args)
+        args (if (map? (last args))
+               (concat (butlast args) (interleave (keys (last args)) (vals (last args))))
+               args)]
+    (apply f args)))
+
+(deftest test-apply-map
+  (is (= :x (apply-map (fn [] :x) [])))
+  (is (= 3 (apply-map + [1 2])))
+  (is (= nil (apply-map (fn [x y & {:keys [opt]}]
+                          opt) [1 2])))
+  (is (= :magic (apply-map (fn [x y & {:keys [opt]}]
+                             opt) [1 2 {:opt :magic}]))))
+
+(defmacro inspect 
+  "prints the expression '<name> is <value>', and returns the value"
+  [value]
+  `(let [result# ~value]
+     (println '~value "is" (with-out-str (clojure.pprint/pprint result#)))
+     result#))

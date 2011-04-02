@@ -3,7 +3,8 @@
   (:use clj-blocks.utils)
   (:require ring.middleware.keyword-params)
   (:require [clojure.string :as str])
-  (:require [compojure.core :as compojure]))
+  (:require [compojure.core])
+  (:require [clj-blocks.compojure :as compojure]))
 
 (defmacro defroutefn
   "Creates a function that can be called normally, or in response to an
@@ -21,7 +22,8 @@
   params in the request map that weren't bound to a positional
   argument.
 
-  The call to defroutefn must be in a namespace using ns-routes.
+  To use these route fns, call (ns-routes the-ns), where the-ns is a
+  namespace containing calls to defroutefn.
 
   Requires the wrap-read-view middleware"
 
@@ -30,15 +32,16 @@
   (let [defn-args (cons name defn-args)
         arg-map (apply decompose-defn-args* defn-args)
         params (:params arg-map)
+        params (if (and (= 1 (count params)) (map? (first params)))
+                 (first params)
+                 params)
         http-method (if (= :any http-method)
                       nil
                       http-method)
         arg-map (update-in arg-map [:attr-map] merge
                            {::http-method http-method
                             ::http-path http-path
-                            ::bindings (if (and (= 1 (count params)) (map? (first params)))
-                                         `(quote ~(first params))
-                                         `(quote ~(:params arg-map)))
+                            ::bindings `(quote ~params)
                             ::view view?})]
     `(defn ~@(defn-map* arg-map))))
 
@@ -60,10 +63,8 @@
           (assert ns)
           (let [f (ns-resolve ns (symbol (clojure.core/name fn-name)))]
             (when f
-              (println http-method path "->" (str ns-symbol "/" (name fn-name)))
-              (if (fn? path)
-                [http-method path fn-binding f]
-                (compojure/compile-route* http-method path fn-binding f))))))
+              (println http-method path "->" (str ns-symbol "/" (name fn-name)) fn-binding)
+              (compojure/compile-route http-method path fn-binding f)))))
       (filter identity)))))
 
 (defn ns-routes-prefix-list [[ns-base & symbols]]
@@ -71,13 +72,13 @@
                   (ns-routes-sym (symbol (str ns-base "." sym))))))
 
 (defn ns-routes* [ns-seq]
-  (doall (apply concat (for [ns ns-seq]
+  (apply compojure.core/routes (doall (apply concat (for [ns ns-seq]
                          (cond
                           (symbol? ns) (ns-routes-sym ns)
-                          (list? ns) (ns-routes-prefix-list ns))))))
+                          (list? ns) (ns-routes-prefix-list ns)))))))
 
 (defmacro ns-routes
-  "Returns the set of routes in ns defined using defroutefn. Takes any number of namespaces or prefix lists like use and require.
+  "Returns the set of routes in ns defined using defroutefn. Takes any number of namespaces or prefix lists like use and require. 
 
   examples:
 
@@ -107,17 +108,6 @@
   [routefn & [route-args]]
   (let [curr-ns *ns*]
     `(path-for* (ns-resolve ~curr-ns (quote ~routefn)) ~route-args)))
-
-(defn apply-map
-  "Like apply, but if the last argument is a map, will convert the map to work with fn signatures that ends with a map destructuring. i.e.
-
-   (defn foo [ a b & {opt1 :opt1 opt2 :opt2}])
-   (apply foo 1 2 {:opt1 42 :opt2 3.14})"
-  [f & args]
-  (let [args (if (map? (last args))
-                 (concat (butlast args) (interleave (keys (last args)) (vals (last args))))
-                 args)]
-    (apply f args)))
 
 (defn wrap-read-view [handler]
   "middleware. If the request has a :request-fn key and the request-fn
